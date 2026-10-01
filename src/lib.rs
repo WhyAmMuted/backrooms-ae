@@ -1,5 +1,5 @@
-mod steamaudio;
+mod steamaudio_module;
 
-use steamaudio::*;
+use steamaudio_module::*;
 
 fn main() {}
