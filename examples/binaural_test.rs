@@ -98,7 +98,7 @@ fn save_wav(filename: &str, samples: &[f32], sample_rate: u32) -> std::io::Resul
     let bits_per_sample: u16 = 16;
     let byte_rate = sample_rate * channels as u32 * (bits_per_sample as u32 / 8);
     let block_align = channels * (bits_per_sample / 8);
-    let data_size = samples.len() as u32 * 2; /
+    let data_size = samples.len() as u32 * 2;
     let chunk_size = 36 + data_size;
 
     file.write_all(b"RIFF")?;
