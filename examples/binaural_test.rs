@@ -1,18 +1,21 @@
 use std::{f32::consts::PI, fs::File, io::Write};
 
-use BaASteam::steamaudio_module::*;
+use BaASteam::steamaudio_module::{
+    basic::{audiobuffer::AudioBuffer, effect::EffectParams},
+    *,
+};
 
-fn main() -> Result<(), u32> {
+fn main() -> Result<(), SteamAudioErrors> {
     println!("Hello! Steam Audio initialization...");
 
-    let (context_settings, context) = create_context(IPLSIMDLevel_IPL_SIMDLEVEL_AVX2)?;
+    let context = create_context(SimdLevels::AVX2)?;
     let mut audio_settings = create_audio_settings(Some(44100), Some(1024));
-    let (hrtf_settings, hrtf) = create_hrtf(Some(1.0 as f32), context, &mut audio_settings)?;
-    let (effect_settings, effect) = create_binaural_effect(context, &mut audio_settings, hrtf)?;
+    let hrtf = create_hrtf(Some(1.0 as f32), &context, &mut audio_settings)?;
+    let effect = create_binaural_effect(&context, &mut audio_settings, &hrtf)?;
 
     println!("Audio preparing");
 
-    let sample_rate: f32 = audio_settings.samplingRate as f32;
+    let sample_rate: f32 = audio_settings.sampling_rate() as f32;
     let duration_seconds = 5.0;
     let total_samples: usize = (sample_rate * duration_seconds) as usize;
 
@@ -30,12 +33,10 @@ fn main() -> Result<(), u32> {
     println!("Generated {} samples", input_audio.len());
     println!("Buffer allocate");
 
-    let frame_size = audio_settings.frameSize;
+    let frame_size = audio_settings.frame_size();
 
-    let mut out_buffer = unsafe { std::mem::zeroed() };
-    unsafe {
-        iplAudioBufferAllocate(context, 2, frame_size, &mut out_buffer);
-    }
+    let mut in_buffer = AudioBuffer::new(1, frame_size, &context)?;
+    let mut out_buffer = AudioBuffer::new(2, frame_size, &context)?;
 
     let mut final_stereo_output: Vec<f32> = Vec::with_capacity(total_samples * 2);
     let mut frame_stereo = vec![0.0f32; 2 * frame_size as usize];
@@ -46,34 +47,26 @@ fn main() -> Result<(), u32> {
         if chunk.len() < frame_size as usize {
             break;
         }
-
-        let mut in_data = [chunk.as_ptr() as *mut f32];
-        let mut in_buffer = IPLAudioBuffer {
-            numChannels: 1,
-            numSamples: frame_size,
-            data: in_data.as_mut_ptr(),
-        };
+        in_buffer.deinterleave(chunk);
 
         let progress = frame_idx as f32 / total_frames as f32;
-        let angle = progress * PI * 4.0;
+        let angle = progress * PI * 6.0;
 
-        let mut effect_param = IPLBinauralEffectParams {
-            direction: IPLVector3 {
+        let effect_param = EffectParams {
+            direction: Vector3 {
                 x: angle.cos(),
-                y: -1.0,
+                y: 0.0,
                 z: angle.sin(),
             },
-            interpolation: IPLHRTFInterpolation_IPL_HRTFINTERPOLATION_NEAREST,
-            spatialBlend: 1.0,
-            hrtf,
-            peakDelays: std::ptr::null_mut(),
+            interpolation: basic::hrtf::HRTFInterpolation::Nearest,
+            spatial_blend: 1.0,
+            hrtf: &hrtf,
+            peak_delays: std::ptr::null_mut(),
         };
 
-        unsafe {
-            iplBinauralEffectApply(effect, &mut effect_param, &mut in_buffer, &mut out_buffer);
-            iplAudioBufferInterleave(context, &mut out_buffer, frame_stereo.as_mut_ptr());
-            final_stereo_output.extend_from_slice(&frame_stereo);
-        }
+        effect.apply(&effect_param, &mut in_buffer, &mut out_buffer);
+        out_buffer.interleave(frame_stereo.as_mut_ptr());
+        final_stereo_output.extend_from_slice(&frame_stereo);
     }
     println!(
         "Wow! Getted {} samples binaural audio",
@@ -83,12 +76,6 @@ fn main() -> Result<(), u32> {
     save_wav("output.wav", &final_stereo_output, 44100).expect("Failed to save WAV");
     println!("File output.wav saved!");
 
-    let mut context = context;
-    let mut effect = effect;
-    let mut hrtf = hrtf;
-    free_all(&mut context, &mut effect, &mut hrtf, &mut out_buffer);
-
-    // free_all(&mut context, &mut effect, &mut hrtf, audio_buffer);
     Ok(())
 }
 

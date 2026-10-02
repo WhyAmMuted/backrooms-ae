@@ -1,88 +1,65 @@
 // src/steamaudio/ffi.rs
 
+use crate::steamaudio_module::basic::{
+    audiobuffer::AudioBuffer,
+    effect::{self, Effect, EffectSettings},
+    hrtf::{HRTF, HRTFSettings},
+};
+
 use super::*;
 
 use std::ptr::{null, null_mut};
 
-pub use binds::{
-    IPLSIMDLevel, IPLSIMDLevel_IPL_SIMDLEVEL_AVX, IPLSIMDLevel_IPL_SIMDLEVEL_AVX2,
-    IPLSIMDLevel_IPL_SIMDLEVEL_AVX512, IPLSIMDLevel_IPL_SIMDLEVEL_NEON,
-    IPLSIMDLevel_IPL_SIMDLEVEL_SSE2, IPLSIMDLevel_IPL_SIMDLEVEL_SSE4,
+use basic::{
+    audio_settings::AudioSettings,
+    context::{Context, ContextSettings},
 };
-pub fn create_context(
-    simd_level: IPLSIMDLevel,
-) -> Result<(IPLContextSettings, IPLContext), IPLerror> {
-    let mut context_settings = IPLContextSettings {
-        version: STEAMAUDIO_VERSION,
-        logCallback: None,
-        allocateCallback: None,
-        freeCallback: None,
-        flags: 0,
-        simdLevel: simd_level,
-    };
-    let mut context: IPLContext = null_mut();
-    let status: IPLerror = unsafe { iplContextCreate(&mut context_settings, &mut context) };
+pub use binds::{
+    IPLAudioBuffer, IPLBinauralEffectParams, IPLHRTFInterpolation_IPL_HRTFINTERPOLATION_NEAREST,
+    IPLVector3, iplAudioBufferInterleave, iplBinauralEffectApply,
+};
+pub use simd_level::SimdLevels;
 
-    catch_error(status, (context_settings, context))
+pub fn create_context(simd_level: SimdLevels) -> Result<Context, SteamAudioErrors> {
+    let mut context_settings = ContextSettings::new(STEAMAUDIO_VERSION, simd_level);
+    let context = Context::new(context_settings)?;
+
+    Ok(context)
 }
 
-pub fn create_audio_settings(
-    sample_rate: Option<i32>,
-    frame_size: Option<i32>,
-) -> IPLAudioSettings {
-    let sample_rate = sample_rate.unwrap_or(44100);
-    let frame_size = frame_size.unwrap_or(1024);
-
-    let audio_settings = IPLAudioSettings {
-        samplingRate: sample_rate,
-        frameSize: frame_size,
-    };
-
-    audio_settings
+pub fn create_audio_settings(sample_rate: Option<i32>, frame_size: Option<i32>) -> AudioSettings {
+    AudioSettings::new(sample_rate.unwrap_or(44100), frame_size.unwrap_or(1024))
 }
 
 pub fn create_hrtf(
     volume: Option<f32>,
-    context: IPLContext,
-    audio_settings: &mut IPLAudioSettings,
-) -> Result<(IPLHRTFSettings, IPLHRTF), IPLerror> {
+    context: &Context,
+    audio_settings: &mut AudioSettings,
+) -> Result<HRTF, SteamAudioErrors> {
     let volume = volume.unwrap_or(1.0);
-    let mut hrtf_settings = IPLHRTFSettings {
-        type_: IPLHRTFType_IPL_HRTFTYPE_DEFAULT,
-        volume,
 
-        sofaData: null(),
-        sofaDataSize: 0,
-        sofaFileName: null(),
-        normType: 0,
-    };
+    let mut hrtf_settings = HRTFSettings::new(volume);
 
-    let mut hrtf: IPLHRTF = null_mut();
-    let status = unsafe { iplHRTFCreate(context, audio_settings, &mut hrtf_settings, &mut hrtf) };
-    catch_error(status, (hrtf_settings, hrtf))
+    let hrtf = HRTF::new(context, audio_settings, &mut hrtf_settings)?;
+
+    Ok(hrtf)
 }
 
 pub fn create_binaural_effect(
-    context: IPLContext,
-    audio_settings: &mut IPLAudioSettings,
-    hrtf: IPLHRTF,
-) -> Result<(IPLBinauralEffectSettings, IPLBinauralEffect), IPLerror> {
-    let mut effect_settings = IPLBinauralEffectSettings { hrtf: hrtf };
-
-    let mut effect: IPLBinauralEffect = null_mut();
-
-    let status: IPLerror = unsafe {
-        iplBinauralEffectCreate(context, audio_settings, &mut effect_settings, &mut effect)
-    };
-
-    catch_error(status, (effect_settings, effect))
+    context: &Context,
+    audio_settings: &mut AudioSettings,
+    hrtf: &HRTF,
+) -> Result<Effect, SteamAudioErrors> {
+    let mut effect_settings = EffectSettings::new(&hrtf);
+    let mut effect = Effect::new(effect_settings, audio_settings, &context)?;
+    Ok(effect)
 }
 
 pub fn create_audio_buffer(
     audio_settings: &mut IPLAudioSettings,
     context: IPLContext,
     in_data: *mut *mut f32,
-) -> Result<(IPLAudioBuffer, IPLAudioBuffer), IPLerror> {
+) -> Result<(IPLAudioBuffer, IPLAudioBuffer), SteamAudioErrors> {
     let mut in_buffer = IPLAudioBuffer {
         numChannels: 1,
         numSamples: audio_settings.frameSize,
@@ -93,19 +70,14 @@ pub fn create_audio_buffer(
 
     let status: IPLerror =
         unsafe { iplAudioBufferAllocate(context, 2, audio_settings.frameSize, &mut out_buffer) };
-    catch_error(status, (in_buffer, out_buffer))
+    catch_error(SteamAudioErrors::convert(status), (in_buffer, out_buffer))
 }
 
-pub fn free_all(
-    context: &mut IPLContext,
-    effect: &mut IPLBinauralEffect,
-    hrtf: &mut IPLHRTF,
-    audio_buffer: &mut IPLAudioBuffer,
-) {
+pub fn free_all(context: Context, effect: Effect, hrtf: HRTF, audio_buffer: AudioBuffer) {
     unsafe {
-        iplAudioBufferFree(*context, audio_buffer);
-        iplBinauralEffectRelease(effect);
-        iplHRTFRelease(hrtf);
-        iplContextRelease(context);
+        drop(audio_buffer);
+        drop(effect);
+        drop(hrtf);
+        drop(context)
     }
 }

@@ -2,3 +2,4 @@ Cargo.lock
 steamaudio/
 .env
 target/
+output.wav
