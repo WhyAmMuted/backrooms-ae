@@ -7,4 +7,5 @@ edition = "2024"
 bindgen = "0.73.2"
 
 [dependencies]
+glam = "0.33.12"
 symphonia = "0.6.1"
