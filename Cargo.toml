@@ -9,4 +9,4 @@ bindgen = "0.73.2"
 [dependencies]
 glam = "0.33.12"
 rubato = "5.0.1"
-symphonia = "0.6.1"
+symphonia = { version = "0.6.1", features = ["all"] }

@@ -71,6 +71,13 @@ impl AudioBuffer {
     pub fn num_samples(&self) -> i32 {
         self.audio_buffer.numSamples
     }
+
+    pub fn channel(&self, index: usize) -> &[f32] {
+        unsafe {
+            let ptr = *&self.audio_buffer.data.add(index);
+            std::slice::from_raw_parts(ptr as *const f32, self.num_samples() as usize)
+        }
+    }
 }
 
 impl Drop for AudioBuffer {

@@ -1,8 +1,6 @@
 #![allow(dead_code)]
-#![allow(unused)]
 
+pub mod audio;
 pub mod steamaudio_module;
-
-use steamaudio_module::*;
 
 fn main() {}
