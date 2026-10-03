@@ -15,6 +15,12 @@ fn main() -> Result<(), Box<(dyn std::error::Error)>> {
 
     let sample_rate = stream.get_audio_source().sample_rate;
 
+    println!(
+        "Getted {} channels with {} sample rate",
+        stream.get_audio_source().channels,
+        sample_rate
+    );
+
     let context = create_context(SimdLevels::AVX2).unwrap();
     let mut audio_settings = create_audio_settings(Some(sample_rate as i32), Some(1024));
     let hrtf = create_hrtf(Some(1.0f32), &context, &mut audio_settings).unwrap();
@@ -37,6 +43,7 @@ fn main() -> Result<(), Box<(dyn std::error::Error)>> {
     let mut final_output = vec![0.0f32; 0];
 
     while let Some(chunk) = stream.next_chunk().expect("Cant") {
+        //println!("[{}] Progres...", frame_idx);
         for i in 0..frame_size as usize {
             left_mono[i] = chunk[i * 2];
             right_mono[i] = chunk[i * 2 + 1];
@@ -88,6 +95,9 @@ fn main() -> Result<(), Box<(dyn std::error::Error)>> {
         frame_idx += 1;
     }
 
+    println!("Итого обработано фреймов: {}", frame_idx);
+    println!("Итого сэмплов в final_output: {}", final_output.len());
+    println!("Processed! Saving..");
     save_wav("out.wav", &final_output, sample_rate).expect("Cant:(");
     println!("huh..");
 
