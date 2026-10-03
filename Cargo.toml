@@ -5,3 +5,6 @@ edition = "2024"
 
 [build-dependencies]
 bindgen = "0.73.2"
+
+[dependencies]
+symphonia = "0.6.1"
