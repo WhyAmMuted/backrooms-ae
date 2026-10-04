@@ -1,14 +1,14 @@
-use std::{f32::consts::PI, fs::File, io::Write, ptr::null_mut, sync::Arc};
+use std::{fs::File, io::Write, ptr::null_mut, sync::Arc};
 
 use BaASteam::{
-    audio::{input::open_audio, streaming::AudioStream},
+    audio::streaming::AudioStream,
     steamaudio_module::{
         basic::{audiobuffer::AudioBuffer, effect::EffectParams},
         *,
     },
 };
 
-fn main() -> Result<(), Box<(dyn std::error::Error)>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello! Steam Audio initialization...");
 
     let mut stream = AudioStream::open(BaASteam::audio::AudioFileType::Wav, "input.wav")?;
