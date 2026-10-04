@@ -1,4 +1,4 @@
-use std::ptr::null_mut;
+use std::{ptr::null_mut, sync::Arc};
 
 use crate::steamaudio_module::{
     IPLAudioBuffer, IPLContext, SteamAudioErrors, basic::context::Context, catch_error,
@@ -8,14 +8,14 @@ use crate::steamaudio_module::{
 
 pub struct AudioBuffer {
     audio_buffer: IPLAudioBuffer,
-    context: IPLContext,
+    context: Arc<Context>,
 }
 
 impl AudioBuffer {
     pub fn new(
         num_channels: i32,
         num_samples: i32,
-        context: &Context,
+        context: Arc<Context>,
     ) -> Result<AudioBuffer, SteamAudioErrors> {
         let mut audio_buffer = AudioBuffer {
             audio_buffer: IPLAudioBuffer {
@@ -23,12 +23,12 @@ impl AudioBuffer {
                 numSamples: num_samples,
                 data: null_mut(),
             },
-            context: context.as_raw(),
+            context: context.clone(),
         };
 
         let status = unsafe {
             iplAudioBufferAllocate(
-                context.as_raw(),
+                context.clone().as_raw(),
                 num_channels,
                 num_samples,
                 audio_buffer.as_raw_mut(),
@@ -40,13 +40,17 @@ impl AudioBuffer {
 
     pub fn interleave(&mut self, dst: *mut f32) {
         unsafe {
-            iplAudioBufferInterleave(self.context, self.as_raw_mut(), dst);
+            iplAudioBufferInterleave(self.context.clone().as_raw(), self.as_raw_mut(), dst);
         }
     }
 
     pub fn deinterleave(&mut self, src: &[f32]) {
         unsafe {
-            iplAudioBufferDeinterleave(self.context, src.as_ptr() as *mut f32, self.as_raw_mut());
+            iplAudioBufferDeinterleave(
+                self.context.clone().as_raw(),
+                src.as_ptr() as *mut f32,
+                self.as_raw_mut(),
+            );
         }
     }
 
@@ -86,7 +90,7 @@ impl Drop for AudioBuffer {
             return;
         }
         unsafe {
-            iplAudioBufferFree(self.context, &mut self.audio_buffer);
+            iplAudioBufferFree(self.context.clone().as_raw(), &mut self.audio_buffer);
         }
     }
 }

@@ -6,7 +6,8 @@ use std::{
 #[inline(always)]
 fn get_platform_dir(name: &str, sdk_root: &Path) -> PathBuf {
     match name {
-        "linux-x64" => sdk_root.join("lib/linux-x64"),
+        "x86_64-unknown-linux-gnu" => sdk_root.join("lib/linux-x64"),
+        "windows-x64" => sdk_root.join("lib/windows-x64"),
         _ => {
             panic!("Unsupported platform!");
         }
@@ -24,8 +25,9 @@ fn main() {
     let header_path = sdk_root.join("include/phonon.h");
     let header_path_str = header_path.to_str().unwrap();
 
-    let platform = "linux-x64";
-    let lib_path = get_platform_dir(platform, &sdk_root);
+    let platform = std::env::var("TARGET").unwrap();
+    println!("{:?}", platform);
+    let lib_path = get_platform_dir(PathBuf::from(platform).to_str().unwrap(), &sdk_root);
 
     println!("cargo:rustc-link-search={}", lib_path.to_str().unwrap());
     println!("cargo:rustc-link-lib=dylib=phonon");

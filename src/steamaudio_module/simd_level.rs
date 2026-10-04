@@ -1,4 +1,8 @@
-use crate::steamaudio_module::IPLSIMDLevel;
+use crate::steamaudio_module::{
+    IPLSIMDLevel, IPLSIMDLevel_IPL_SIMDLEVEL_AVX, IPLSIMDLevel_IPL_SIMDLEVEL_AVX2,
+    IPLSIMDLevel_IPL_SIMDLEVEL_AVX512, IPLSIMDLevel_IPL_SIMDLEVEL_NEON,
+    IPLSIMDLevel_IPL_SIMDLEVEL_SSE2, IPLSIMDLevel_IPL_SIMDLEVEL_SSE4,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub enum SimdLevels {
@@ -13,12 +17,12 @@ pub enum SimdLevels {
 impl SimdLevels {
     pub fn convert(&self) -> IPLSIMDLevel {
         match self {
-            Self::AVX => 2,
-            Self::AVX2 => 3,
-            Self::AVX512 => 4,
-            Self::NEON => 0,
-            Self::SSE2 => 0,
-            Self::SSE4 => 1,
+            Self::AVX => IPLSIMDLevel_IPL_SIMDLEVEL_AVX,
+            Self::AVX2 => IPLSIMDLevel_IPL_SIMDLEVEL_AVX2,
+            Self::AVX512 => IPLSIMDLevel_IPL_SIMDLEVEL_AVX512,
+            Self::NEON => IPLSIMDLevel_IPL_SIMDLEVEL_NEON,
+            Self::SSE2 => IPLSIMDLevel_IPL_SIMDLEVEL_SSE2,
+            Self::SSE4 => IPLSIMDLevel_IPL_SIMDLEVEL_SSE4,
         }
     }
 }

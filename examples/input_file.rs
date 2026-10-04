@@ -1,4 +1,4 @@
-use std::{f32::consts::PI, fs::File, io::Write, ptr::null_mut};
+use std::{f32::consts::PI, fs::File, io::Write, ptr::null_mut, sync::Arc};
 
 use BaASteam::{
     audio::{input::open_audio, streaming::AudioStream},
@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<(dyn std::error::Error)>> {
         sample_rate
     );
 
-    let context = create_context(SimdLevels::AVX2).unwrap();
+    let context = Arc::new(create_context(SimdLevels::AVX2).unwrap());
     let mut audio_settings = create_audio_settings(Some(sample_rate as i32), Some(1024));
     let hrtf = create_hrtf(Some(1.0f32), &context, &mut audio_settings).unwrap();
     let effect_l = create_binaural_effect(&context, &mut audio_settings, &hrtf).unwrap();
@@ -31,8 +31,8 @@ fn main() -> Result<(), Box<(dyn std::error::Error)>> {
 
     let frame_size = audio_settings.frame_size();
 
-    let mut in_buffer = AudioBuffer::new(1, frame_size, &context).unwrap();
-    let mut out_buffer = AudioBuffer::new(2, frame_size, &context).unwrap();
+    let mut in_buffer = AudioBuffer::new(1, frame_size, context.clone()).unwrap();
+    let mut out_buffer = AudioBuffer::new(2, frame_size, context.clone()).unwrap();
 
     let mut left_mono = vec![0.0f32; frame_size as usize];
     let mut right_mono = vec![0.0f32; frame_size as usize];

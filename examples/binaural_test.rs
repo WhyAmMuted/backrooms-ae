@@ -1,14 +1,14 @@
-use std::{f32::consts::PI, fs::File, io::Write};
-
 use BaASteam::steamaudio_module::{
     basic::{audiobuffer::AudioBuffer, effect::EffectParams},
     *,
 };
+use std::sync::Arc;
+use std::{f32::consts::PI, fs::File, io::Write};
 
 fn main() -> Result<(), SteamAudioErrors> {
     println!("Hello! Steam Audio initialization...");
 
-    let context = create_context(SimdLevels::AVX2)?;
+    let context = Arc::new(create_context(SimdLevels::AVX2)?);
     let mut audio_settings = create_audio_settings(Some(44100), Some(1024));
     let hrtf = create_hrtf(Some(1.0 as f32), &context, &mut audio_settings)?;
     let effect = create_binaural_effect(&context, &mut audio_settings, &hrtf)?;
@@ -35,8 +35,8 @@ fn main() -> Result<(), SteamAudioErrors> {
 
     let frame_size = audio_settings.frame_size();
 
-    let mut in_buffer = AudioBuffer::new(1, frame_size, &context)?;
-    let mut out_buffer = AudioBuffer::new(2, frame_size, &context)?;
+    let mut in_buffer = AudioBuffer::new(1, frame_size, context.clone())?;
+    let mut out_buffer = AudioBuffer::new(2, frame_size, context.clone())?;
 
     let mut final_stereo_output: Vec<f32> = Vec::with_capacity(total_samples * 2);
     let mut frame_stereo = vec![0.0f32; 2 * frame_size as usize];
