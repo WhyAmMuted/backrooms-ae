@@ -1,9 +1,7 @@
 use std::{f32::consts::PI, time::Duration};
 
-use cpal::{
-    Error, OutputCallbackInfo, StreamConfig,
-    traits::{DeviceTrait, HostTrait, StreamTrait},
-};
+use BaASteam::realtime_playback::audio::AudioPlay;
+use cpal::{Error, StreamConfig};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Audio preparing");
@@ -23,48 +21,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .collect();
 
+    let mut audio: Vec<f32> = vec![];
+    for i in input_audio {
+        audio.push(i);
+        audio.push(i);
+    }
+
     println!(
         "Audio has generated! {} sample rate; {} duration; {} samples",
         sample_rate, duration_seconds, total_samples
     );
-
-    let host = cpal::default_host();
-    println!("Host created!");
-
-    let device = host
-        .default_output_device()
-        .ok_or("Can't get output device")?;
-    println!("Device found!");
-
     let stream_config = StreamConfig {
         channels: 2,
         sample_rate: sample_rate,
         buffer_size: cpal::BufferSize::Default,
     };
-    println!("Stream Config created!");
 
-    let mut cur_sample = 0;
-
-    let data_callback = move |data: &mut [f32], _info: &OutputCallbackInfo| {
-        data.fill(0f32);
-        let chunks = data.chunks_exact_mut(2);
-
-        for i in chunks {
-            if let Some(&sample) = input_audio.get(cur_sample) {
-                i[0] = sample;
-                i[1] = sample;
-                cur_sample += 1;
-            } else {
-                break;
-            }
-        }
-    };
-
-    let err_callback = move |err: Error| eprintln!("CPAL Error: {}", err);
-
-    let stream = device.build_output_stream(stream_config, data_callback, err_callback, None)?;
-
-    stream.play()?;
+    let mut audio_play = AudioPlay::new(None, stream_config).expect("Can't create CPAL struct");
+    audio_play.add_samples(audio);
+    audio_play
+        .play(move |err: Error| eprintln!("Error while cpal play: {}", err))
+        .expect("Error while cpal play init");
 
     std::thread::sleep(Duration::from_secs(10));
 

@@ -7,6 +7,7 @@ edition = "2024"
 bindgen = "0.73.2"
 
 [dependencies]
+cpal = "0.18.2"
 glam = "0.33.12"
 rubato = "5.0.1"
 symphonia = { version = "0.6.1", features = ["all"] }

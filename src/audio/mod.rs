@@ -1,6 +1,5 @@
 pub mod input;
 pub mod streaming;
-
 pub enum AudioFileType {
     Wav,
     Ogg,
