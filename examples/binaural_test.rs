@@ -1,4 +1,4 @@
-use BaASteam::steamaudio_module::{
+use backaudio_nexus::steamaudio_module::{
     basic::{audiobuffer::AudioBuffer, effect::EffectParams},
     *,
 };

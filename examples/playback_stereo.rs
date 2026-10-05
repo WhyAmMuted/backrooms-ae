@@ -1,10 +1,11 @@
 use std::{f32::consts::PI, time::Duration};
 
-use BaASteam::realtime_playback::audio::AudioPlay;
+use backaudio_nexus::realtime_playback::audio::AudioPlay;
 use cpal::{Error, StreamConfig};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Audio preparing");
+
 
     let sample_rate: u32 = 44100;
     let duration_seconds = 5.0;

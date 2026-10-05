@@ -1,8 +1,8 @@
 use std::{f32::consts::PI, time::Duration};
 
 use cpal::{
-    Error, OutputCallbackInfo, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
+    Error, OutputCallbackInfo, StreamConfig,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

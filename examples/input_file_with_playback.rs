@@ -1,6 +1,6 @@
 use std::{ptr::null_mut, sync::Arc, time::Duration};
 
-use BaASteam::{
+use backaudio_nexus::{
     audio::streaming::AudioStream,
     realtime_playback::audio::AudioPlay,
     steamaudio_module::{
@@ -13,7 +13,7 @@ use cpal::StreamConfig;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello! Steam Audio initialization...");
 
-    let mut stream = AudioStream::open(BaASteam::audio::AudioFileType::Wav, "input.wav")?;
+    let mut stream = AudioStream::open(backaudio_nexus::audio::AudioFileType::Wav, "input.wav")?;
 
     let sample_rate = stream.get_audio_source().sample_rate;
 
@@ -110,6 +110,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("Итого обработано фреймов: {}", frame_idx);
+
+    // audio_play.terminate_when_empty();
     // println!("Processed! Saving..");
     // save_wav("out.wav", &final_output, sample_rate).expect("Cant:(");
     println!("huh..");

@@ -1,10 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use BaASteam::audio::input::open_audio;
+    use backaudio_nexus::audio::input::open_audio;
 
     #[test]
     fn open_wav() {
-        let src = open_audio(BaASteam::audio::AudioFileType::Wav, "input.wav").expect("Cant open");
+        let src =
+            open_audio(backaudio_nexus::audio::AudioFileType::Wav, "input.wav").expect("Cant open");
 
         println!("Частота (Sample Rate): {} Гц", src.sample_rate);
         println!("Каналы: {}", src.channels);

@@ -1,10 +1,11 @@
 use std::{
     collections::VecDeque,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, atomic::AtomicBool},
+    time::Duration,
 };
 
 use cpal::{
-    Device, Host, OutputCallbackInfo, Stream, StreamConfig,
+    Device, Error, Host, OutputCallbackInfo, Stream, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
 };
 
@@ -87,8 +88,29 @@ impl AudioPlay {
             self.device
                 .build_output_stream(self.cfg, data_callback, error_callback, None)?;
         stream.play()?;
+
         self._stream = Some(stream);
 
         Ok(())
     }
+
+    // pub fn terminate_when_empty(&mut self) {
+    //
+    //     std::thread::spawn(move || {});
+    //     loop {
+    //         {
+    //             if self.samples.lock().unwrap().is_empty() {
+    //                 self._stream
+    //                     .as_ref()
+    //                     .ok_or("Stream not exist")
+    //                     .unwrap()
+    //                     .pause()
+    //                     .unwrap();
+    //                 self._stream = None;
+    //                 break;
+    //             }
+    //         }
+    //         std::thread::sleep(Duration::from_millis(250));
+    //     }
+    // }
 }
