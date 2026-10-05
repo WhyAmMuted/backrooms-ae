@@ -1,17 +1,20 @@
 use std::{
     collections::VecDeque,
-    sync::{Arc, Mutex, atomic::AtomicBool},
-    time::Duration,
+    sync::{Arc, Mutex},
 };
 
 use cpal::{
-    Device, Error, Host, OutputCallbackInfo, Stream, StreamConfig,
+    Device,
+    // Host,
+    OutputCallbackInfo,
+    Stream,
+    StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
 };
 
 pub struct AudioPlay {
     samples: Arc<Mutex<VecDeque<f32>>>,
-    host: Host,
+    // host: Host,
     device: Device,
     _stream: Option<Stream>,
     cfg: StreamConfig,
@@ -36,7 +39,7 @@ impl AudioPlay {
 
         Ok(AudioPlay {
             samples: Arc::new(Mutex::new(VecDeque::new())),
-            host: host,
+            // host: host,
             device: device,
             cfg: stream_config,
             _stream: None,
