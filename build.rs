@@ -17,10 +17,10 @@ fn get_platform_dir(name: &str, sdk_root: &Path) -> PathBuf {
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
 
-    let sdk_root = manifest_dir.join("steamaudio");
+    let sdk_root = manifest_dir.join("libsteamaudio");
     let sdk_root = sdk_root
         .canonicalize()
-        .expect("Directory of 'steamaudio' module not found");
+        .expect("Directory of 'libsteamaudio' module not found");
 
     let header_path = sdk_root.join("include/phonon.h");
     let header_path_str = header_path.to_str().unwrap();
@@ -38,6 +38,7 @@ fn main() {
 
     let bindings = bindgen::Builder::default()
         .header(header_path_str)
+        .derive_default(true)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Can't generate bindgen.rs");

@@ -30,6 +30,10 @@ impl Context {
         };
         Status::catch(Self { context: context }, Status::from(status))
     }
+
+    pub fn as_raw(&self) -> IPLContext {
+        self.context
+    }
 }
 
 impl Drop for Context {

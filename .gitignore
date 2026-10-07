@@ -1,5 +1,5 @@
 Cargo.lock
-steamaudio/
+libsteamaudio/
 .env
 target/
 *.wav

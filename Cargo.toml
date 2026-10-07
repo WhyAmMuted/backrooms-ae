@@ -1,13 +1,11 @@
 [package]
-name = "backaudio_nexus"
+name = "nexus"
 version = "0.1.0"
 edition = "2024"
 
-[build-dependencies]
-bindgen = "0.73.2"
-
 [dependencies]
 cpal = "0.18.2"
-glam = "0.33.12"
-rubato = "5.0.1"
-symphonia = { version = "0.6.1", features = ["all"] }
+symphonia = "0.6.1"
+
+[build-dependencies]
+bindgen = "0.73.2"
