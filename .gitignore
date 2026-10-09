@@ -3,3 +3,4 @@ libsteamaudio/
 .env
 target/
 *.wav
+__trash/
